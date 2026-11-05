@@ -117,6 +117,34 @@ def fig_random_pool():
     fig.savefig(OUT / "random_pool.png"); plt.close(fig)
 
 
+def fig_learning_curves():
+    """Regret on held-out cards vs training steps, V0 / V1 / V2 (mean over training seeds)."""
+    exp, pool = "strength_cultist_x2", "eval"
+    z = np.load(RES / exp / "eval_episodes_eval.npz")
+    opt = z[OPT][:, 1]
+    fig, ax = plt.subplots(figsize=(7.2, 3.8))
+    for label, fam, color in (("V0  one-hot ids, fixed slots", "dqn_tuned_onehot_pool", "#eb6834"),
+                              ("V1  measured effects, fixed slots", "dqn_tuned_effects", "#1baf7a"),
+                              ("V2  measured effects, scorer", "dqn_scorer_effects", "#2a78d6")):
+        keys = [k for k in z.files if k.startswith(fam + "_s") and "__" in k]
+        steps = sorted({int(k.split("__")[1]) for k in keys})
+        runs = sorted({k.split("__")[0] for k in keys})
+        curve = [np.mean([(z[f"{r}__{st}"][:, 1] - opt).mean() for r in runs]) for st in steps]
+        ax.plot(np.array(steps) / 1000, curve, "-o", color=color, lw=2, ms=4, label=label)
+    m = (z[MCTS][:, 1] - opt).mean()
+    ax.axhline(m, ls="--", color=MUTED, lw=1.2)
+    ax.text(300, m, "MCTS @2000 (sees draw order)", ha="right", va="bottom", fontsize=8, color=MUTED)
+    ax.set_yscale("log")
+    ticks = [1, 2, 5, 10, 20, 50]
+    ax.set_yticks(ticks, [str(t) for t in ticks]); ax.minorticks_off()
+    ax.set_xlabel("training steps (thousands)")
+    ax.set_ylabel("regret on held-out cards (log)")
+    ax.set_title("Learning curves on unseen cards (Strength deck vs Cultist)", loc="left",
+                 fontsize=11, color=INK)
+    ax.legend(loc="upper right", fontsize=9)
+    fig.savefig(OUT / "learning_curves.png"); plt.close(fig)
+
+
 def fig_pool_size(exp_prefix="random_cultist_x3_p", sizes=(6, 12, 24, 54)):
     """Training-pool diversity sweep (experiments/first_combat/run_pool_size.sh)."""
     if not all((RES / f"{exp_prefix}{n}" / "eval_episodes_eval.npz").exists() for n in sizes):
@@ -149,5 +177,5 @@ def fig_pool_size(exp_prefix="random_cultist_x3_p", sizes=(6, 12, 24, 54)):
 
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
-    fig_ladder(); fig_card_description(); fig_random_pool(); fig_pool_size()
+    fig_ladder(); fig_card_description(); fig_random_pool(); fig_learning_curves(); fig_pool_size()
     print(f"figures -> {OUT}")

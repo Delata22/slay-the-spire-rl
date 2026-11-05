@@ -107,7 +107,11 @@ Figure at the top. Strength deck (Inflame, Spot Weakness, Flex, Heavy Blade, Twi
 | **V2 measured effects, scorer** | **0.44** | **1.02** | seen −0.33 [−0.41, −0.26] · unseen **−1.03 [−1.21, −0.86]** |
 | *MCTS @2000 (sees draw order)* | *1.07* | *1.49* | |
 
-The scorer also needs **4× fewer environment steps** to reach 95 % of its final level (30k vs 120k), for 20 % more compute per step.
+![Learning curves](docs/figures/learning_curves.png)
+
+The scorer also learns faster: on training episodes it reaches 95 % of its final gain in 30k steps versus 120k for
+V1 ([`convergence.py`](experiments/first_combat/convergence.py)), for 20 % more compute per step; on held-out cards
+it is below the MCTS reference from 90k steps on, which neither fixed-slot agent reaches.
 
 ### 4. Describing a card: measured + nominal
 
