@@ -19,7 +19,9 @@ then rates each candidate action from `(state, descriptor)`, so an unseen card i
 - **Adding the printed ("nominal") values of a card to its measured effects** cuts regret on unseen cards by
   another 44 % (2.17 → 1.22 HP, −0.95 [−1.16, −0.75]) at no cost on seen ones.
 - **On a random 54-card training pool, effect-based agents show no degradation on 17 held-out cards**
-  (−0.04 HP, CI contains 0), while one-hot agents lose 0.5 HP.
+  (−0.04 HP, CI contains 0), while one-hot agents lose 0.5 HP. A sweep over nested pools of 6 → 54 training cards
+  shows the gap to held-out cards **shrinking with card diversity** (+1.75 → +0.47 HP), the signature of memorisation
+  when the pool is small.
 - The blind agents (they do not know the draw order) **beat the reference MCTS that clones the RNG**
   (i.e. cheats) — and analysing why led to finding **two bugs in that MCTS** (see below).
 - Tuning mattered more than the choice of algorithm: `gamma = 1` on ~15-decision episodes gave PPO −2.3 HP.
@@ -125,7 +127,35 @@ Scorer agent, 5 cards per combat, 150k steps.
 
 ### 5. Does card diversity at training time buy generalisation?
 
-<!-- POOL_SIZE_SECTION -->
+On the Strength archetype every agent degraded by +2 to +3 HP on held-out cards, while on the 54-card random
+pool effect-based agents did not degrade at all. Two explanations compete: the encoding fails on some cards, or
+6 training cards are simply too few and the agent memorises them. This experiment separates the two by training
+on **nested random pools of 6 ⊂ 12 ⊂ 24 ⊂ 54 cards** and always testing on **the same 18 held-out cards**
+(Cultist, 3 cards per combat, 150k steps, 3 seeds, probe leak masked; [`run_pool_size.sh`](experiments/first_combat/run_pool_size.sh)).
+
+![Pool size](docs/figures/pool_size.png)
+
+| training cards | scorer: seen | scorer: held-out | scorer: degradation | one-hot: held-out | one-hot: degradation |
+|---|---|---|---|---|---|
+| 6 | 0.81 | 2.56 | +1.75 | 3.85 | +2.22 |
+| 12 | 1.18 | 1.93 | +0.76 | 6.43 | +4.29 |
+| 24 | 1.42 | 2.51 | +1.10 | 3.07 | +0.86 |
+| 54 | 1.01 | **1.48** | **+0.47** | 3.30 | +0.83 |
+
+*MCTS@2000 (sees the draw order) on the held-out cards: 1.09.*
+
+- **Diversity helps the scorer generalise.** From 6 to 54 training cards its regret on the same held-out cards
+  drops by **−1.08 [−1.26, −0.90]**, and the seen→held-out degradation shrinks from +1.75 to +0.47. The bump at 24
+  comes from a single seed (3.59 vs 1.97 and 1.98 for the other two).
+- **Memorisation is visible in the training curves.** With 6–12 cards, regret on held-out cards *rises* between
+  75k and 150k steps while regret on seen cards keeps falling (one-hot, 12 cards: 4.7 → 6.4; scorer, 6 cards:
+  2.3 → 2.6). With 54 cards both keep improving.
+- **The effect-based scorer beats one-hot ids on held-out cards at every pool size** (paired differences from
+  −0.56 to −4.50 HP), and one-hot ids plateau around 3 HP of regret even with 54 cards.
+- This is consistent with the archetype result being mainly a data-diversity problem rather than a failure of
+  the encoding (the archetype runs used other cards, so this is not a direct test of them). A gap remains: with
+  54 cards the scorer is ahead of the draw-order-aware MCTS on seen cards (1.01 vs 1.33) but still behind it on
+  held-out cards (1.48 vs 1.09).
 
 ### Behaviour probes
 
@@ -162,7 +192,7 @@ Scripts: [`diagnose_mcts.py`](experiments/first_combat/diagnose_mcts.py), [`emul
 
 - **One encounter per training run, Act 1 only**, and ≤ 5 random cards per combat. Full-run play (card rewards, map, shop) is out of scope.
 - **Three training seeds per configuration.** Between-seed variation was small (±0.2 HP) but this is still a small sample.
-- **Archetype pools are small** (6 training cards). On the Strength / Red Slaver / Gremlin Nob archetypes, all encodings degrade by +2 to +3 HP on held-out cards; with 6 training cards, the three encodings tie on seen cards, which suggests memorisation. Experiment 5 tests this directly.
+- **Archetype pools are small** (6 training cards). On the Strength / Red Slaver / Gremlin Nob archetypes, all encodings degrade by +2 to +3 HP on held-out cards; with 6 training cards, the three encodings tie on seen cards, which suggests memorisation; experiment 5 confirms that diversity shrinks the degradation (+1.75 → +0.47).
 - **Probe leak in earlier runs.** Results 1–4 were produced before `leak="mask"` existed. Against a single enemy (Cultist, Jaw Worm) Sword Boomerang's split cannot leak anything, but Havoc and True Grit could reveal hidden information when drawn. Experiment 5 uses the masked probe.
 - The simulator exposes only 17 of its ~60 player statuses: Feel No Pain, Corruption, Juggernaut, etc. are invisible once played, for every encoding.
 - An exact *blind* optimum (expectimax over beliefs) was implemented ([`blind_optimal.py`](src/stsenv/blind_optimal.py)) but costs ~2 min per belief: the reported bound is the clairvoyant optimum.

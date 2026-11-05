@@ -1,0 +1,326 @@
+{
+ "scenario": 4,
+ "n_eval": 500,
+ "baselines": {
+  "optimal (pioche connue)": {
+   "win": 1.0,
+   "win_ci": [
+    1.0,
+    1.0
+   ],
+   "hp_lost": 0.804,
+   "hp_lost_ci": [
+    0.688,
+    0.928
+   ],
+   "turns": NaN
+  },
+  "random": {
+   "win": 0.758,
+   "win_ci": [
+    0.71995,
+    0.796
+   ],
+   "hp_lost": 49.438,
+   "hp_lost_ci": [
+    47.4139,
+    51.492399999999996
+   ],
+   "turns": 7.064
+  },
+  "heuristic": {
+   "win": 0.998,
+   "win_ci": [
+    0.994,
+    1.0
+   ],
+   "hp_lost": 11.004,
+   "hp_lost_ci": [
+    10.082,
+    11.94805
+   ],
+   "turns": 5.3
+  },
+  "mcts_oracle@2000": {
+   "win": 1.0,
+   "win_ci": [
+    1.0,
+    1.0
+   ],
+   "hp_lost": 2.274,
+   "hp_lost_ci": [
+    1.984,
+    2.5500499999999997
+   ],
+   "turns": 3.656
+  }
+ },
+ "runs": {
+  "dqn_scorer_both_mask_effects_s0": [
+   {
+    "step": 0,
+    "win": 0.0,
+    "win_ci": [
+     0.0,
+     0.0
+    ],
+    "hp_lost": 80.0,
+    "hp_lost_ci": [
+     80.0,
+     80.0
+    ],
+    "turns": 7.006
+   },
+   {
+    "step": 75000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 2.336,
+    "hp_lost_ci": [
+     2.098,
+     2.576
+    ],
+    "turns": 4.106
+   },
+   {
+    "step": 150000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 1.878,
+    "hp_lost_ci": [
+     1.65,
+     2.12805
+    ],
+    "turns": 4.008
+   }
+  ],
+  "dqn_scorer_both_mask_effects_s1": [
+   {
+    "step": 0,
+    "win": 0.0,
+    "win_ci": [
+     0.0,
+     0.0
+    ],
+    "hp_lost": 80.0,
+    "hp_lost_ci": [
+     80.0,
+     80.0
+    ],
+    "turns": 7.15
+   },
+   {
+    "step": 75000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 2.41,
+    "hp_lost_ci": [
+     2.168,
+     2.664
+    ],
+    "turns": 3.876
+   },
+   {
+    "step": 150000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 1.94,
+    "hp_lost_ci": [
+     1.702,
+     2.18805
+    ],
+    "turns": 4.12
+   }
+  ],
+  "dqn_scorer_both_mask_effects_s2": [
+   {
+    "step": 0,
+    "win": 0.998,
+    "win_ci": [
+     0.994,
+     1.0
+    ],
+    "hp_lost": 17.226,
+    "hp_lost_ci": [
+     16.0594,
+     18.372049999999998
+    ],
+    "turns": 5.756
+   },
+   {
+    "step": 75000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 2.378,
+    "hp_lost_ci": [
+     2.11,
+     2.646
+    ],
+    "turns": 4.184
+   },
+   {
+    "step": 150000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 2.122,
+    "hp_lost_ci": [
+     1.8799,
+     2.372
+    ],
+    "turns": 3.914
+   }
+  ],
+  "dqn_tuned_onehot_pool_s0": [
+   {
+    "step": 0,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 12.262,
+    "hp_lost_ci": [
+     11.5999,
+     12.90015
+    ],
+    "turns": 4.842
+   },
+   {
+    "step": 75000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 4.0,
+    "hp_lost_ci": [
+     3.718,
+     4.284
+    ],
+    "turns": 3.94
+   },
+   {
+    "step": 150000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 2.854,
+    "hp_lost_ci": [
+     2.582,
+     3.13
+    ],
+    "turns": 4.038
+   }
+  ],
+  "dqn_tuned_onehot_pool_s1": [
+   {
+    "step": 0,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 12.994,
+    "hp_lost_ci": [
+     12.33785,
+     13.6601
+    ],
+    "turns": 5.068
+   },
+   {
+    "step": 75000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 3.866,
+    "hp_lost_ci": [
+     3.56195,
+     4.1800999999999995
+    ],
+    "turns": 4.14
+   },
+   {
+    "step": 150000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 2.926,
+    "hp_lost_ci": [
+     2.646,
+     3.202149999999999
+    ],
+    "turns": 4.162
+   }
+  ],
+  "dqn_tuned_onehot_pool_s2": [
+   {
+    "step": 0,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 17.508,
+    "hp_lost_ci": [
+     16.48,
+     18.5383
+    ],
+    "turns": 5.268
+   },
+   {
+    "step": 75000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 3.994,
+    "hp_lost_ci": [
+     3.6679500000000003,
+     4.330149999999999
+    ],
+    "turns": 4.09
+   },
+   {
+    "step": 150000,
+    "win": 1.0,
+    "win_ci": [
+     1.0,
+     1.0
+    ],
+    "hp_lost": 3.042,
+    "hp_lost_ci": [
+     2.728,
+     3.348099999999999
+    ],
+    "turns": 4.084
+   }
+  ]
+ },
+ "pool": "train",
+ "extra_cards": 3
+}

@@ -146,32 +146,51 @@ def fig_learning_curves():
 
 
 def fig_pool_size(exp_prefix="random_cultist_x3_p", sizes=(6, 12, 24, 54)):
-    """Training-pool diversity sweep (experiments/first_combat/run_pool_size.sh)."""
+    """Training-pool diversity sweep (experiments/first_combat/run_pool_size.sh).
+    Left: regret on the 18 held-out cards (dots = training seeds, line = mean).
+    Right: degradation = regret on held-out cards - regret on the run's own training cards."""
     if not all((RES / f"{exp_prefix}{n}" / "eval_episodes_eval.npz").exists() for n in sizes):
         print("pool-size sweep: results missing, figure skipped")
         return
-    agents = (("scorer, measured + nominal effects", "dqn_scorer_both_mask_effects", "#2a78d6"),
+    agents = (("action scorer, measured + nominal effects", "dqn_scorer_both_mask_effects", "#2a78d6"),
               ("fixed slots, one-hot card ids", "dqn_tuned_onehot_pool", "#eb6834"))
-    fig, axes = plt.subplots(1, 2, figsize=(9.5, 3.6), sharey=False)
-    for ax, (pool, title) in zip(axes, (("eval", "held-out cards (same 18 for every size)"),
-                                        ("train", "cards seen in training"))):
-        for label, key, color in agents:
-            m, lo, hi = [], [], []
-            for n in sizes:
-                r = regret(f"{exp_prefix}{n}", pool, key)
-                c = boot(r); m.append(r.mean()); lo.append(c[0]); hi.append(c[1])
-            ax.fill_between(sizes, lo, hi, color=color, alpha=0.15, lw=0)
-            ax.plot(sizes, m, "-o", color=color, lw=2, ms=6, label=label)
-        mc = [regret(f"{exp_prefix}{n}", pool, MCTS).mean() for n in sizes]
-        ax.plot(sizes, mc, "--", color=MUTED, lw=1.2, label="MCTS @2000 (sees draw order)")
-        ax.set_xscale("log", base=2); ax.set_xticks(sizes, [str(n) for n in sizes])
+
+    def per_seed(n, pool, fam):
+        z = np.load(RES / f"{exp_prefix}{n}" / f"eval_episodes_{pool}.npz")
+        opt = z[OPT][:, 1]
+        runs = sorted({k.split("__")[0] for k in z.files if k.startswith(fam + "_s")})
+        out = []
+        for r in runs:
+            last = max(int(k.split("__")[1]) for k in z.files if k.startswith(r + "__"))
+            out.append((z[f"{r}__{last}"][:, 1] - opt).mean())
+        return np.array(out)
+
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(10, 3.9))
+    for k, (label, fam, color) in enumerate(agents):
+        dx = (k - 0.5) * 0.06
+        unseen = [per_seed(n, "eval", fam) for n in sizes]
+        deg = [per_seed(n, "eval", fam) - per_seed(n, "train", fam) for n in sizes]
+        for ax, vals in ((a1, unseen), (a2, deg)):
+            for n, v in zip(sizes, vals):
+                ax.scatter(np.full(len(v), n) * 2 ** dx, v, s=18, color=color, alpha=0.45, lw=0)
+            ax.plot(np.array(sizes) * 2 ** dx, [v.mean() for v in vals], "-o", color=color, lw=2,
+                    ms=6, label=label)
+    m = regret(f"{exp_prefix}{sizes[0]}", "eval", MCTS).mean()
+    a1.axhline(m, ls="--", color=MUTED, lw=1.2)
+    a1.text(sizes[-1] * 1.15, m, "MCTS @2000\n(sees draw order)", va="center", fontsize=8, color=MUTED)
+    a2.axhline(0, color=MUTED, lw=0.8)
+    for ax in (a1, a2):
+        ax.set_xscale("log", base=2); ax.set_xticks(sizes, [str(n) for n in sizes]); ax.minorticks_off()
         ax.set_xlabel("distinct cards in the training pool")
-        ax.set_title(title, loc="left", fontsize=10, color=INK)
-    axes[0].set_ylabel("regret (HP lost above optimal)")
-    axes[0].legend(loc="upper right", fontsize=8)
-    fig.suptitle("Does card diversity at training time buy generalisation? (Cultist, 3 random cards)",
+    a1.set_ylabel("regret on held-out cards")
+    a2.set_ylabel("held-out minus seen regret")
+    a1.set_title("Regret on the same 18 held-out cards", loc="left", fontsize=10, color=INK)
+    a2.set_title("Degradation from seen to held-out cards", loc="left", fontsize=10, color=INK)
+    fig.suptitle("Training-card diversity vs generalisation (Cultist, 3 random cards, 150k steps, 3 seeds)",
                  x=0.01, ha="left", fontsize=11, color=INK)
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0, 1, 0.9))
+    h, l = a1.get_legend_handles_labels()
+    fig.legend(h, l, loc="upper left", bbox_to_anchor=(0.01, 0.93), ncol=2, fontsize=9)
     fig.savefig(OUT / "pool_size.png"); plt.close(fig)
 
 
