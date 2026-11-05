@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+external/
+*.pt
+*.zip
+# training outputs: only the evaluation summaries are versioned
+results/**/ckpt_*
+results/**/train_log.jsonl
+results/**/replays/
+results/**/logs/
+results/**/*.log
+*.tmp
+.pytest_cache/

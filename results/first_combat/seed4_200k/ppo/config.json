@@ -1,0 +1,18 @@
+{
+ "algo": "ppo",
+ "scenario": 4,
+ "steps": 200000,
+ "seed": 0,
+ "tag": "",
+ "lr": null,
+ "gamma": 0.99,
+ "ent_coef": 0.01,
+ "device": "cuda",
+ "n_envs": 8,
+ "batch_episodes": 32,
+ "buffer": 50000,
+ "batch": 128,
+ "learning_starts": 5000,
+ "train_freq": 4,
+ "target_every": 2000
+}

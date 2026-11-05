@@ -1,0 +1,23 @@
+{
+ "algo": "dqn",
+ "scenario": 4,
+ "steps": 400000,
+ "seed": 2,
+ "tag": "",
+ "lr": null,
+ "gamma": 0.99,
+ "ent_coef": 0.01,
+ "device": "cuda",
+ "n_envs": 4,
+ "config": "default",
+ "encoding": "onehot",
+ "n_steps": 256,
+ "n_epochs": 4,
+ "eps_frac": 0.5,
+ "batch_episodes": 32,
+ "buffer": 50000,
+ "batch": 128,
+ "learning_starts": 5000,
+ "train_freq": 4,
+ "target_every": 2000
+}

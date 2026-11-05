@@ -1,0 +1,31 @@
+[project]
+name = "stsenv"
+version = "0.1.0"
+description = "Combat environments and agents for Slay the Spire that generalise to unseen cards"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Gurvan Estable" }]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26",
+    "torch>=2.2",
+    "gymnasium>=0.29",
+    "sb3-contrib>=2.3",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+stsenv = ["*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

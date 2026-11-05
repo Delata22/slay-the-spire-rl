@@ -1,0 +1,186 @@
+{
+ "heuristic": {
+  "hp_lost": 72.85333333333334,
+  "strength_first": [
+   0.1267605633802817,
+   71
+  ],
+  "debuff_before_big_hit": [
+   0.36435643564356435,
+   505
+  ],
+  "body_slam_block": [
+   NaN,
+   0
+  ],
+  "hp_for_tempo": [
+   0.0,
+   0
+  ],
+  "aoe_usage": [
+   NaN,
+   0
+  ]
+ },
+ "mcts@2000": {
+  "hp_lost": 20.406666666666666,
+  "strength_first": [
+   0.37142857142857144,
+   70
+  ],
+  "debuff_before_big_hit": [
+   0.6355140186915887,
+   642
+  ],
+  "body_slam_block": [
+   NaN,
+   0
+  ],
+  "hp_for_tempo": [
+   0.0,
+   0
+  ],
+  "aoe_usage": [
+   NaN,
+   0
+  ]
+ },
+ "dqn_tuned_effects_s0": {
+  "hp_lost": 24.26,
+  "strength_first": [
+   0.5915492957746479,
+   71
+  ],
+  "debuff_before_big_hit": [
+   0.6288,
+   625
+  ],
+  "body_slam_block": [
+   NaN,
+   0
+  ],
+  "hp_for_tempo": [
+   0.0,
+   0
+  ],
+  "aoe_usage": [
+   NaN,
+   0
+  ]
+ },
+ "dqn_tuned_effects_s1": {
+  "hp_lost": 23.34,
+  "strength_first": [
+   0.647887323943662,
+   71
+  ],
+  "debuff_before_big_hit": [
+   0.6256077795786061,
+   617
+  ],
+  "body_slam_block": [
+   NaN,
+   0
+  ],
+  "hp_for_tempo": [
+   0.0,
+   0
+  ],
+  "aoe_usage": [
+   NaN,
+   0
+  ]
+ },
+ "dqn_tuned_onehot_pool_s0": {
+  "hp_lost": 24.386666666666667,
+  "strength_first": [
+   0.7464788732394366,
+   71
+  ],
+  "debuff_before_big_hit": [
+   0.6231884057971014,
+   621
+  ],
+  "body_slam_block": [
+   NaN,
+   0
+  ],
+  "hp_for_tempo": [
+   0.0,
+   0
+  ],
+  "aoe_usage": [
+   NaN,
+   0
+  ]
+ },
+ "dqn_tuned_onehot_pool_s1": {
+  "hp_lost": 24.786666666666665,
+  "strength_first": [
+   0.704225352112676,
+   71
+  ],
+  "debuff_before_big_hit": [
+   0.618657937806874,
+   611
+  ],
+  "body_slam_block": [
+   NaN,
+   0
+  ],
+  "hp_for_tempo": [
+   0.0,
+   0
+  ],
+  "aoe_usage": [
+   NaN,
+   0
+  ]
+ },
+ "dqn_tuned_onehot_s0": {
+  "hp_lost": 24.953333333333333,
+  "strength_first": [
+   0.6056338028169014,
+   71
+  ],
+  "debuff_before_big_hit": [
+   0.6284779050736498,
+   611
+  ],
+  "body_slam_block": [
+   NaN,
+   0
+  ],
+  "hp_for_tempo": [
+   0.0,
+   0
+  ],
+  "aoe_usage": [
+   NaN,
+   0
+  ]
+ },
+ "dqn_tuned_onehot_s1": {
+  "hp_lost": 24.08,
+  "strength_first": [
+   0.7323943661971831,
+   71
+  ],
+  "debuff_before_big_hit": [
+   0.6188976377952756,
+   635
+  ],
+  "body_slam_block": [
+   NaN,
+   0
+  ],
+  "hp_for_tempo": [
+   0.0,
+   0
+  ],
+  "aoe_usage": [
+   NaN,
+   0
+  ]
+ }
+}
