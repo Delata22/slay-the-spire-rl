@@ -139,7 +139,13 @@ def main():
                     help="evaluate runs trained on the first N cards of the training pool")
     ap.add_argument("--pool", default="eval", choices=["train", "eval", "all"],
                     help="card pool at eval: 'eval' = cards NEVER seen in training")
+    ap.add_argument("--exclude-cards", default="",
+                    help="comma-separated cards removed from the pool before the split "
+                         "(BARRICADE reproduces the seed4_x3 runs)")
     a = ap.parse_args()
+    if a.exclude_cards:
+        from stsenv.combat_env import exclude_cards
+        exclude_cards(a.exclude_cards.split(","))
 
     if a.deck or a.encounter:
         deck = a.deck or "random"

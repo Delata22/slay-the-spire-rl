@@ -108,3 +108,21 @@ def test_optimal_is_a_lower_bound(env):
         _, best = solve((spec, seed))
         info = play(env, pol, seed)
         assert best <= info["hp_lost"]
+
+
+def test_fixed_mcts_finds_the_lethal_line():
+    """Seed 306, turn 3 of the fixed-deck scenario: three Strikes kill the Jaw Worm. The original
+    search spends every simulation on Bash+; the fixed one (patches/scumsearch_fixed_uct.patch) kills."""
+    from stsenv.policies import MCTSOraclePolicy
+    env = CombatEnv(4)
+    env.reset(options={"episode_seed": 306})
+    pol = MCTSOraclePolicy(2000)
+    while env.bc.turn + 1 < 3:
+        env.step(pol.act(env))
+    try:
+        fixed = sts.mcts_recommend(env.bc, 200, fixed=True)
+    except TypeError:
+        pytest.skip("simulator built without patches/scumsearch_fixed_uct.patch")
+    original = sts.mcts_recommend(env.bc, 200)
+    assert "Strike" in fixed.desc(env.bc)
+    assert "Bash" in original.desc(env.bc)

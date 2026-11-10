@@ -3,7 +3,8 @@
 #   bash scripts/setup_simulator.sh            # -> external/sts_lightspeed/build/slaythespire*.so
 # Requirements: git, cmake >= 3.16, a C++17 compiler, Python 3.10+ headers.
 # Pinned versions: sts_lightspeed @7476a81 + the RL hooks patch from sts-rl-agent @54d7402
-# (MIT, adds clone / init_encounter / status bindings). pybind11 is bumped to v2.13.6 because
+# (MIT, adds clone / init_encounter / status bindings), then patches/scumsearch_fixed_uct.patch
+# (our fix of the reference MCTS, opt-in with fixed=True). pybind11 is bumped to v2.13.6 because
 # the pinned v2.7.1 does not compile against Python >= 3.11.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -19,6 +20,9 @@ git checkout -q 7476a81
 git submodule update --init --recursive
 git apply --check ../sts-rl-agent/sim_patch/sim_rl_hooks.patch 2>/dev/null \
   && git apply ../sts-rl-agent/sim_patch/sim_rl_hooks.patch || echo "patch already applied"
+# our fix of the MCTS baseline: mcts_recommend(bc, sims, fixed=True); fixed=False is the original search
+git apply --check "$ROOT/patches/scumsearch_fixed_uct.patch" 2>/dev/null \
+  && git apply "$ROOT/patches/scumsearch_fixed_uct.patch" || echo "MCTS fix already applied"
 (cd pybind11 && git fetch -q --tags && git checkout -q v2.13.6)
 
 mkdir -p build && cd build

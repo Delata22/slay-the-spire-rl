@@ -82,6 +82,18 @@ def new_battle(template_gc, episode_seed: int, encounter=None):
 # added to the scenario deck and then removed, so the template is never modified.
 _POOL_PATH = os.path.join(os.path.dirname(__file__), "ironclad_pool.json")
 IRONCLAD_POOL = json.load(open(_POOL_PATH)) if os.path.exists(_POOL_PATH) else []
+
+
+def exclude_cards(names):
+    """Removes cards from the Ironclad pool in place, BEFORE the train / held-out split.
+    Needed to reproduce runs made before BARRICADE was added to the pool (seed4, seed4_x3):
+    the random split of 71 cards (53 / 18) differs from the split of 72 cards (54 / 18)."""
+    IRONCLAD_POOL[:] = [c for c in IRONCLAD_POOL if c not in set(names)]
+    os.environ["STS_EXCLUDE_CARDS"] = ",".join(sorted(set(names)))   # inherited by spawned workers
+
+
+if os.environ.get("STS_EXCLUDE_CARDS"):
+    exclude_cards(os.environ["STS_EXCLUDE_CARDS"].split(","))
 from .decks import ARCHETYPES, ENCOUNTERS, archetype_pools  # noqa: E402
 _BAD_PATH = os.path.join(os.path.dirname(__file__), "ironclad_pool_unsafe.json")
 UNSAFE_CARDS = set(json.load(open(_BAD_PATH))) if os.path.exists(_BAD_PATH) else set()

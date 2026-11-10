@@ -3,9 +3,9 @@
 
   python experiments/make_figures.py            # -> docs/figures/*.png
 
-Metric everywhere: regret = HP lost minus HP lost by the optimal player that knows the draw
-order (exact brute-force search), on the same paired combat seeds. Lower is better; 0 is a
-bound no blind agent can reach. Learned agents: final checkpoint, training seeds pooled.
+Metric everywhere: regret = HP lost minus HP lost by the best known play on the same combat (best of
+an exhaustive search that knows the draw order and of every evaluated policy; see
+experiments/first_combat/recompute_optimal.py). Lower is better; regret is >= 0 by construction. Learned agents: final checkpoint, training seeds pooled.
 Error bars: 95 % bootstrap over combats.
 """
 from pathlib import Path
@@ -19,7 +19,9 @@ ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / "results" / "first_combat"
 OUT = ROOT / "docs" / "figures"
 OPT = "optimal (pioche connue)"          # key stored in the evaluation files
-MCTS = "mcts_oracle@2000"
+MCTS = "mcts_oracle@2000"                  # reference search, with its UCT bug
+MCTS_FIX = "mcts_fixed@2000"               # same search, bug fixed (patches/scumsearch_fixed_uct.patch)
+MCTS_NOTE = "Hatched: MCTS references, which clone the RNG and therefore see the draw order."
 
 SEEN, UNSEEN = "#2a78d6", "#eb6834"      # categorical slots 1-2
 INK, MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
@@ -45,6 +47,8 @@ def regret(exp, pool, policy, step=None):
     suffix = f"_{pool}" if pool else ""
     z = np.load(RES / exp / f"eval_episodes{suffix}.npz")
     opt = z[OPT][:, 1]
+    if policy.startswith("mcts_fixed"):                 # written by eval_mcts_fixed.py
+        return np.load(RES / exp / f"eval_mcts_fixed{suffix}.npz")[policy][:, 1] - opt
     if policy in z.files:
         return z[policy][:, 1] - opt
     keys = [k for k in z.files if k.startswith(policy + "_s") and "__" in k and "smoke" not in k]
@@ -72,48 +76,57 @@ def seen_unseen_bars(ax, exp, groups, title):
             m = r.mean(); c = boot(r)
             means.append(m); lo.append(m - c[0]); hi.append(c[1] - m)
         xs = x + (j - 0.5) * w
-        ax.bar(xs, means, w - 0.03, color=color, label=label, yerr=[lo, hi],
-               error_kw=dict(ecolor=INK, lw=0.9, capsize=2.5))
+        bars = ax.bar(xs, means, w - 0.03, color=color, label=label, yerr=[lo, hi],
+                      error_kw=dict(ecolor=INK, lw=0.9, capsize=2.5))
+        for b, (_, key) in zip(bars, groups):
+            if key.startswith("mcts"):
+                b.set_hatch("///"); b.set_edgecolor("white"); b.set_linewidth(0)
         for xi, m, h in zip(xs, means, hi):
             ax.text(xi, m + h + 0.04 * top[0], f"{m:.2f}", ha="center", va="bottom",
                     fontsize=8, color=MUTED)
     ax.set_xticks(x, [g for g, _ in groups], fontsize=9)
     ax.set_ylim(0, top[0] * 1.3)
-    ax.set_ylabel("regret (HP lost above optimal)")
+    ax.set_ylabel("regret (HP lost above best known play)")
     ax.set_title(title, loc="left", fontsize=11, color=INK, pad=24)
     ax.legend(loc="lower left", bbox_to_anchor=(0, 1.0), ncol=2, fontsize=9, borderaxespad=0.2)
+    if any(k.startswith("mcts") for _, k in groups):
+        ax.text(0, -0.2, MCTS_NOTE, transform=ax.transAxes, fontsize=8, color=MUTED, va="top")
 
 
 def fig_ladder():
-    fig, ax = plt.subplots(figsize=(8.6, 4.2))
+    fig, ax = plt.subplots(figsize=(9.8, 4.3))
     seen_unseen_bars(ax, "strength_cultist_x2", [
         ("V0  one-hot ids\nfixed action slots", "dqn_tuned_onehot_pool"),
         ("V1  measured effects\nfixed action slots", "dqn_tuned_effects"),
         ("V2  measured effects\naction scorer", "dqn_scorer_effects"),
-        ("MCTS @2000\n(sees draw order)", MCTS),
+        ("MCTS @2000\noriginal (bugged)", MCTS),
+        ("MCTS @2000\nfixed", MCTS_FIX),
     ], "Representation ladder: Strength deck vs Cultist, 2 random cards per combat")
     fig.savefig(OUT / "ladder.png"); plt.close(fig)
 
 
 def fig_card_description():
-    fig, ax = plt.subplots(figsize=(8.6, 4.2))
+    fig, ax = plt.subplots(figsize=(9.8, 4.3))
     seen_unseen_bars(ax, "strength_cultist_x5", [
         ("nominal\n(printed values)", "dqn_scorer_nominal_effects"),
         ("measured\n(in current context)", "dqn_scorer_effects"),
         ("measured + nominal", "dqn_scorer_both_effects"),
-        ("MCTS @2000\n(sees draw order)", MCTS),
+        ("MCTS @2000\noriginal (bugged)", MCTS),
+        ("MCTS @2000\nfixed", MCTS_FIX),
     ], "How to describe a card: scorer agent, 5 random cards per combat")
     fig.savefig(OUT / "card_description.png"); plt.close(fig)
 
 
 def fig_random_pool():
-    fig, ax = plt.subplots(figsize=(8.6, 4.2))
+    fig, ax = plt.subplots(figsize=(9.8, 4.3))
     seen_unseen_bars(ax, "seed4_x3", [
         ("DQN\none-hot ids", "dqn_tuned_onehot"),
         ("DQN\nmeasured effects", "dqn_tuned_effects"),
         ("PPO\none-hot ids", "ppo_tuned_onehot"),
         ("PPO\nmeasured effects", "ppo_tuned_effects"),
-    ], "Random card pool (54 train / 17 held-out cards) vs Jaw Worm, 3 random cards")
+        ("MCTS @2000\noriginal (bugged)", MCTS),
+        ("MCTS @2000\nfixed", MCTS_FIX),
+    ], "Random card pool (53 train / 18 held-out cards) vs Jaw Worm, 3 random cards")
     fig.savefig(OUT / "random_pool.png"); plt.close(fig)
 
 
@@ -131,11 +144,12 @@ def fig_learning_curves():
         runs = sorted({k.split("__")[0] for k in keys})
         curve = [np.mean([(z[f"{r}__{st}"][:, 1] - opt).mean() for r in runs]) for st in steps]
         ax.plot(np.array(steps) / 1000, curve, "-o", color=color, lw=2, ms=4, label=label)
-    m = (z[MCTS][:, 1] - opt).mean()
-    ax.axhline(m, ls="--", color=MUTED, lw=1.2)
-    ax.text(300, m, "MCTS @2000 (sees draw order)", ha="right", va="bottom", fontsize=8, color=MUTED)
+    for key, ls, text in ((MCTS, "--", "MCTS @2000, original (bugged)"), (MCTS_FIX, ":", "MCTS @2000, fixed")):
+        m = regret(exp, pool, key).mean()
+        ax.axhline(m, ls=ls, color=MUTED, lw=1.2)
+        ax.text(0, m, text + " - sees draw order", ha="left", va="bottom", fontsize=8, color=MUTED)
     ax.set_yscale("log")
-    ticks = [1, 2, 5, 10, 20, 50]
+    ticks = [0.2, 0.5, 1, 2, 5, 10, 20, 50]
     ax.set_yticks(ticks, [str(t) for t in ticks]); ax.minorticks_off()
     ax.set_xlabel("training steps (thousands)")
     ax.set_ylabel("regret on held-out cards (log)")
@@ -175,9 +189,12 @@ def fig_pool_size(exp_prefix="random_cultist_x3_p", sizes=(6, 12, 24, 54)):
                 ax.scatter(np.full(len(v), n) * 2 ** dx, v, s=18, color=color, alpha=0.45, lw=0)
             ax.plot(np.array(sizes) * 2 ** dx, [v.mean() for v in vals], "-o", color=color, lw=2,
                     ms=6, label=label)
-    m = regret(f"{exp_prefix}{sizes[0]}", "eval", MCTS).mean()
-    a1.axhline(m, ls="--", color=MUTED, lw=1.2)
-    a1.text(sizes[-1] * 1.15, m, "MCTS @2000\n(sees draw order)", va="center", fontsize=8, color=MUTED)
+    for key, ls, text, va in ((MCTS, "--", "MCTS @2000, original", "bottom"),
+                              (MCTS_FIX, ":", "MCTS @2000, fixed", "top")):
+        m = regret(f"{exp_prefix}{sizes[0]}", "eval", key).mean()
+        a1.axhline(m, ls=ls, color=MUTED, lw=1.2)
+        a1.text(sizes[-1] * 1.05, m, text, va="bottom", ha="right", fontsize=8, color=MUTED)
+    a1.set_ylim(bottom=0)
     a2.axhline(0, color=MUTED, lw=0.8)
     for ax in (a1, a2):
         ax.set_xscale("log", base=2); ax.set_xticks(sizes, [str(n) for n in sizes]); ax.minorticks_off()

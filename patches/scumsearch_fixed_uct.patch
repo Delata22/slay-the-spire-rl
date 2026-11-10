@@ -1,0 +1,90 @@
+--- a/include/sim/search/BattleScumSearcher2.h
++++ b/include/sim/search/BattleScumSearcher2.h
+@@ -36,8 +36,12 @@
+ 
+         EvalFnc evalFnc;
+         double explorationParameter = 3*sqrt(2);
++        // fixedUct: (1) quality = (mean - min) / (max - min) instead of mean / (max - min), which gave the
++        // first visited edge a score of ~1e4 and starved every other edge; (2) unvisited edges are tried
++        // first; (3) mean = sum / visits; (4) bestActionValue starts at lowest(), not min(). Off by default to keep the original behaviour.
++        bool fixedUct = false;
+ 
+-        double bestActionValue = std::numeric_limits<double>::min();
++        double bestActionValue = std::numeric_limits<double>::min();   // smallest POSITIVE double; lowest() when fixedUct
+         double minActionValue = std::numeric_limits<double>::max();
+         int outcomePlayerHp = 0;
+ 
+--- a/src/sim/search/BattleScumSearcher2.cpp
++++ b/src/sim/search/BattleScumSearcher2.cpp
+@@ -25,6 +25,9 @@
+ 
+ void search::BattleScumSearcher2::search(int64_t simulations) {
+     g_debug_scum_search = this;
++    if (fixedUct && root.simulationCount == 0) {
++        bestActionValue = std::numeric_limits<double>::lowest();
++    }
+ 
+     if (isTerminalState(*rootState)) {
+         auto evaluation = evaluateEndState(*rootState);
+@@ -114,7 +117,14 @@
+     const auto &edge = parent.edges[edgeIdx];
+ 
+     double qualityValue = 0;
+-    if (!bestActionSequence.empty()) {
++    if (fixedUct) {
++        if (edge.node.simulationCount == 0) {
++            return std::numeric_limits<double>::infinity();
++        }
++        const double evalRange = bestActionValue - minActionValue;
++        const double mean = edge.node.evaluationSum / edge.node.simulationCount;
++        qualityValue = evalRange > 0 ? (mean - minActionValue) / evalRange : 0.5;
++    } else if (!bestActionSequence.empty()) {
+         auto avgEvaluation = edge.node.evaluationSum / (edge.node.simulationCount+1);
+         double evalRange = bestActionValue - minActionValue;
+         qualityValue = avgEvaluation / evalRange;
+--- a/bindings/slaythespire.cpp
++++ b/bindings/slaythespire.cpp
+@@ -1394,8 +1394,9 @@
+           "enumerate all legal actions in the current battle state for forward search");
+ 
+     m.def("mcts_recommend",
+-          [](const BattleContext &bc, int sims) {
++          [](const BattleContext &bc, int sims, bool fixed) {
+               search::BattleScumSearcher2 searcher(bc);     // copies bc internally
++              searcher.fixedUct = fixed;
+               searcher.search(sims);
+               if (searcher.outcomePlayerHp > 0 && !searcher.bestActionSequence.empty()) {
+                   return searcher.bestActionSequence.front();   // first action of the best found line
+@@ -1406,7 +1407,31 @@
+               }
+               return best ? *best : search::Action(search::ActionType::END_TURN);
+           },
+-          "run MCTS from the given battle state and return its recommended next action (BC teacher oracle)");
++          "run MCTS from the given battle state and return its recommended next action (BC teacher oracle)",
++          pybind11::arg("bc"), pybind11::arg("sims"), pybind11::arg("fixed") = false);
++
++    m.def("mcts_debug",
++          [](const BattleContext &bc, int sims, bool fixed) {
++              search::BattleScumSearcher2 searcher(bc);
++              searcher.fixedUct = fixed;
++              searcher.search(sims);
++              pybind11::dict d;
++              d["best_value"] = searcher.bestActionValue;
++              d["min_value"] = searcher.minActionValue;
++              d["outcome_hp"] = searcher.outcomePlayerHp;
++              d["best_len"] = (int)searcher.bestActionSequence.size();
++              pybind11::list edges;
++              for (const auto &e : searcher.root.edges) {
++                  pybind11::dict ed;
++                  ed["action"] = e.action;
++                  ed["visits"] = e.node.simulationCount;
++                  ed["mean"] = e.node.simulationCount ? e.node.evaluationSum / e.node.simulationCount : 0.0;
++                  edges.append(ed);
++              }
++              d["edges"] = edges;
++              if (!searcher.bestActionSequence.empty()) d["best_first"] = searcher.bestActionSequence.front();
++              return d;
++          }, pybind11::arg("bc"), pybind11::arg("sims"), pybind11::arg("fixed") = false);
+ 
+     // ******************** OUT-OF-COMBAT GAME ACTION API ********************
+     // generic interface to drive map / rest / shop / event / rewards decisions from python,

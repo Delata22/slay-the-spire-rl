@@ -45,12 +45,25 @@ def solve(args):
             lost = hp0 - st.player.cur_hp if st.outcome == sts.Outcome.PLAYER_VICTORY else hp0
             best[0] = min(best[0], lost)
             return
+        # Branch-and-bound on HP lost so far. Only admissible if HP never goes back up: with a healing
+        # card (Reaper) a line that loses HP first and heals later is cut. Without the cut the search
+        # does not finish (> 10 min per combat), so the reported reference is the best of this search
+        # and of every evaluated policy (experiments/first_combat/recompute_optimal.py).
         if hp0 - st.player.cur_hp >= best[0]:
             return
         _, amap, _ = legal_map(st)
         seen = set()
         for i, a in sorted(amap.items()):
-            key = (st.hand[a.source_idx].name if a.action_type == AT.CARD else "end", a.target_idx)
+            # Copies of the same card are merged (otherwise the search is 20-100x slower). This is an
+            # approximation: for a player who knows the draw order, WHICH copy goes to the discard pile
+            # changes the next reshuffle, so the result is "best play up to card-copy symmetry".
+            # Every non-card action (end turn, each potion, each card-selection option) is distinct;
+            # earlier versions keyed them all as "end", so potions and selections were never explored.
+            if a.action_type == AT.CARD:
+                c = st.hand[a.source_idx]
+                key = ("card", int(c.id), c.upgraded, c.cost_for_turn, a.target_idx)
+            else:
+                key = ("other", i)
             if key in seen:
                 continue
             seen.add(key)

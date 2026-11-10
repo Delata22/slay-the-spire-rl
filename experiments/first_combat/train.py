@@ -210,7 +210,13 @@ def main():
     ap.add_argument("--learning-starts", type=int, default=5_000)
     ap.add_argument("--train-freq", type=int, default=4)
     ap.add_argument("--target-every", type=int, default=2_000)
+    ap.add_argument("--exclude-cards", default="",
+                    help="comma-separated cards removed from the pool before the split "
+                         "(BARRICADE reproduces the seed4_x3 runs)")
     a = ap.parse_args()
+    if a.exclude_cards:
+        from stsenv.combat_env import exclude_cards
+        exclude_cards(a.exclude_cards.split(","))
     for k, v in PRESETS.get(a.algo, {}).get(a.config, {}).items():
         setattr(a, k, v)
     torch.manual_seed(a.seed)

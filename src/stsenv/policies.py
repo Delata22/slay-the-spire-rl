@@ -51,10 +51,14 @@ class HeuristicPolicy:
 class MCTSOraclePolicy:
     """ScumSearch (mcts_recommend): its simulations copy the RNG -> it KNOWS the future draw
     order. A cheating upper bound, not an imitable target."""
-    def __init__(self, sims=2000): self.sims = sims; self.name = f"mcts_oracle@{sims}"
+    def __init__(self, sims=2000, fixed=False):
+        self.sims = sims; self.fixed = fixed
+        self.name = f"mcts_fixed@{sims}" if fixed else f"mcts_oracle@{sims}"
 
     def act(self, env):
-        a = sts.mcts_recommend(env.bc, self.sims)
+        # fixed=True needs the simulator built with patches/scumsearch_fixed_uct.patch
+        a = (sts.mcts_recommend(env.bc, self.sims, fixed=True) if self.fixed
+             else sts.mcts_recommend(env.bc, self.sims))
         i = action_index(a, env.bc)
         if i in env.amap:
             return i
